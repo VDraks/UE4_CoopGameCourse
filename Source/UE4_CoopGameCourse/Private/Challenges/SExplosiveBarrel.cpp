@@ -19,6 +19,9 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 
 	ForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("Force"));
 	ForceComp->SetupAttachment(MeshComp);
+	ForceComp->bImpulseVelChange = true;
+	ForceComp->bAutoActivate = false;
+	ForceComp->bIgnoreOwningActor = true;
 }
 
 // Called when the game starts or when spawned
@@ -38,7 +41,7 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComponent, floa
 
 		ForceComp->FireImpulse();
 
-		MeshComp->AddImpulse(FVector::UpVector * 50000);		
+		MeshComp->AddImpulse(FVector::UpVector * 400, NAME_None, true);		
 
 		MeshComp->SetMaterial(0, ExplodeMaterial);
 		
