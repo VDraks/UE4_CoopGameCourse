@@ -6,6 +6,18 @@
 #include "GameFramework/Actor.h"
 #include "SWeapon.generated.h"
 
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+};
+
 UCLASS()
 class UE4_COOPGAMECOURSE_API ASWeapon : public AActor
 {
@@ -22,6 +34,8 @@ protected:
 	USkeletalMeshComponent* MeshComp;
 
 	void PlayFireEffects(const FVector& TracerEndPoint);
+
+	void PlayImpactEffects(const EPhysicalSurface& SurfaceType, const FVector& ImpactPoint);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;
@@ -52,6 +66,9 @@ protected:
 
     virtual void Fire();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
+
 	FTimerHandle TimerHandle_TimeBetweenShots;
 
 	float LastFireTime;
@@ -62,6 +79,12 @@ protected:
 
 	// Derived from RateOfFire
 	float TimeBetweenShots;
+
+	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
+	FHitScanTrace HitScanTrace;
+
+	UFUNCTION()
+	void OnRep_HitScanTrace();
 
 public:
     void StartFire();
