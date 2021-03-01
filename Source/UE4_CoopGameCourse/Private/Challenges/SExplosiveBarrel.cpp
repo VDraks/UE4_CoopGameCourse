@@ -26,6 +26,7 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	ForceComp->bIgnoreOwningActor = true;
 
 	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned
@@ -33,7 +34,10 @@ void ASExplosiveBarrel::BeginPlay()
 {
 	Super::BeginPlay();
 
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		HealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
+	}
 }
 
 void ASExplosiveBarrel::OnRep_Exploded()
@@ -51,16 +55,11 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComponent, floa
 	
 	if (Health <= 0.0f)
 	{
-		bExploded = true;
+		SetExploded(true);
 
-		PlayExplodeEffects();
+		ForceComp->FireImpulse();
 
-		if (GetLocalRole() == ROLE_Authority)
-		{
-			ForceComp->FireImpulse();
-
-			MeshComp->AddImpulse(FVector::UpVector * 400, NAME_None, true);
-		}
+		MeshComp->AddImpulse(FVector::UpVector * 400, NAME_None, true);
 	}	
 }
 
@@ -72,6 +71,12 @@ void ASExplosiveBarrel::PlayExplodeEffects()
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());	
 	}
+}
+
+void ASExplosiveBarrel::SetExploded(bool Exploded)
+{
+	bExploded = Exploded;
+	OnRep_Exploded();
 }
 
 void ASExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

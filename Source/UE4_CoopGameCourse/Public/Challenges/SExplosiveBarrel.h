@@ -49,6 +49,8 @@ protected:
 
 private:
 	void PlayExplodeEffects();
+
+	void SetExploded(bool Exploded);
 };
 
 
