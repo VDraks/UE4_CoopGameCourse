@@ -37,10 +37,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	UParticleSystem* ExplosionEffect;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
-	bool bDied;
+	UPROPERTY(BlueprintReadOnly, Category = "Explosion", ReplicatedUsing = OnRep_Exploded)
+	bool bExploded;
+
+	UFUNCTION()
+    void OnRep_Exploded();
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta,
 		const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+private:
+	void PlayExplodeEffects();
 };
+
+

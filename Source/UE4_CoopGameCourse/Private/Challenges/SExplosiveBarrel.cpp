@@ -3,6 +3,8 @@
 
 #include "Challenges/SExplosiveBarrel.h"
 
+
+#include "GeneratedCodeHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 
@@ -22,6 +24,8 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	ForceComp->bImpulseVelChange = true;
 	ForceComp->bAutoActivate = false;
 	ForceComp->bIgnoreOwningActor = true;
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -32,22 +36,47 @@ void ASExplosiveBarrel::BeginPlay()
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
 }
 
-void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta,
-    const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void ASExplosiveBarrel::OnRep_Exploded()
 {
-	if (Health <= 0.0f && !bDied)
+	PlayExplodeEffects();	
+}
+
+void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta,
+                                        const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (bExploded)
 	{
-		bDied = true;
+		return;
+	}
+	
+	if (Health <= 0.0f)
+	{
+		bExploded = true;
 
-		ForceComp->FireImpulse();
+		PlayExplodeEffects();
 
-		MeshComp->AddImpulse(FVector::UpVector * 400, NAME_None, true);		
-
-		MeshComp->SetMaterial(0, ExplodeMaterial);
-		
-		if (ExplosionEffect)
+		if (GetLocalRole() == ROLE_Authority)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());	
+			ForceComp->FireImpulse();
+
+			MeshComp->AddImpulse(FVector::UpVector * 400, NAME_None, true);
 		}
 	}	
+}
+
+void ASExplosiveBarrel::PlayExplodeEffects()
+{
+	MeshComp->SetMaterial(0, ExplodeMaterial);
+		
+	if (ExplosionEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());	
+	}
+}
+
+void ASExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASExplosiveBarrel, bExploded, COND_SkipOwner);
 }
