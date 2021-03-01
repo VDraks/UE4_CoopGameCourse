@@ -27,6 +27,15 @@ ASWeapon::ASWeapon()
 	TracerTargetName = "Target";
 
 	BaseDamage = 20.f;
+
+	RateOfFire = 600;
+}
+
+void ASWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TimeBetweenShots = 60 / RateOfFire;
 }
 
 void ASWeapon::PlayFireEffects(const FVector& TracerEndPoint)
@@ -119,6 +128,21 @@ void ASWeapon::Fire()
 			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.f, 0, 1.f);	
 		}
 		
-		PlayFireEffects(TracerEndPoint);	
+		PlayFireEffects(TracerEndPoint);
+
+		LastFireTime = GetWorld()->TimeSeconds;
 	}
+}
+
+void ASWeapon::StartFire()
+{
+	const float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.f);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ASWeapon::Fire, TimeBetweenShots,
+		true, FirstDelay);
+}
+
+void ASWeapon::StopFire()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }

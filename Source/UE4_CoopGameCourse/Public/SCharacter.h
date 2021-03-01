@@ -48,6 +48,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100))
 	float ZoomInterpSpeed;
+	
 
 	void BeginZoom();
 
@@ -61,7 +62,9 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 	FName WeaponAttachSocketName;
 
-	void Fire();
+	void StartFire();
+
+	void StopFire();
 
 public:	
 	// Called every frame
