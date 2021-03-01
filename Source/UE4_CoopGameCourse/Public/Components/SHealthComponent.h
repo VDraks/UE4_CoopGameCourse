@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "SHealthComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, class USHealthComponent*, HealthCompon, float, Health, float, HealthDeltaconst, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
 
 UCLASS( ClassGroup=(COOP), meta=(BlueprintSpawnableComponent) )
 class UE4_COOPGAMECOURSE_API USHealthComponent : public UActorComponent
@@ -29,4 +30,8 @@ protected:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 		AController* InstigatedBy, AActor* DamageCauser);
+	
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnHealthChangedSignature OnHealthChanged;
 };
