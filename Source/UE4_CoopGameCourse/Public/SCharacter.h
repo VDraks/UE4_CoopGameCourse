@@ -10,6 +10,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class ASWeapon;
 
 UCLASS()
 class UE4_COOPGAMECOURSE_API ASCharacter : public ACharacter
@@ -51,6 +52,16 @@ protected:
 	void BeginZoom();
 
 	void EndZoom();
+
+	ASWeapon* CurrentWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	TSubclassOf<ASWeapon> StarterWeaponClass;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+	FName WeaponAttachSocketName;
+
+	void Fire();
 
 public:	
 	// Called every frame
