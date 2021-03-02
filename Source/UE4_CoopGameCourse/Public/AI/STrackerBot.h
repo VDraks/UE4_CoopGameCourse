@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "STrackerBot.generated.h"
 
+class USphereComponent;
 class USHealthComponent;
 
 UCLASS()
@@ -26,7 +27,9 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	USHealthComponent* HealthComp;
-	
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
+	USphereComponent* SphereComp;
 
 	UFUNCTION()
 	void HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
@@ -54,13 +57,21 @@ protected:
 
 	bool bExploded;
 
+	bool bStartedSelfDestruction;
+
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
 	float ExplosionRadius;
 
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
 	float ExplosionDamage;
 
-public:	
-	// Called every frame
+	FTimerHandle TimerHandle_SelfDamage;
+
+	void DamageSelf();;
+
+public:
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	
+
 	virtual void Tick(float DeltaTime) override;
 };
