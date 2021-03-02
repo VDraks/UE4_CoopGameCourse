@@ -3,6 +3,8 @@
 
 #include "SPickupActor.h"
 
+
+#include "SPowerupActor.h"
 #include "Components/DecalComponent.h"
 #include "Components/SphereComponent.h"
 
@@ -18,18 +20,40 @@ ASPickupActor::ASPickupActor()
 	DecalComp->DecalSize = FVector(64, 75, 75);
 	DecalComp->SetupAttachment(RootComponent);
 
+	PowerUpInstance = nullptr;
 }
 
 // Called when the game starts or when spawned
 void ASPickupActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Respawn();
+}
+
+void ASPickupActor::Respawn()
+{
+	if (PowerUpClass == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PowerUpClass is nulptr in %s. Please update your Blueprint"), *GetName());
+		return;
+	}
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
+	PowerUpInstance = GetWorld()->SpawnActor<ASPowerupActor>(PowerUpClass, GetTransform(), SpawnParameters);
 }
 
 void ASPickupActor::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	// TODO Grant powerup
+	if (PowerUpInstance)
+	{
+		PowerUpInstance->ActivatePowerup();
+		PowerUpInstance = nullptr;
+
+		GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickupActor::Respawn, CooldownDuration);
+	}
 }

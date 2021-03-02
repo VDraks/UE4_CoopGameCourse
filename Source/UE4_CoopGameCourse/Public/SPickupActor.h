@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "SPickupActor.generated.h"
 
+class ASPowerupActor;
 class USphereComponent;
 
 UCLASS()
@@ -25,6 +26,19 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UDecalComponent* DecalComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PickupActor")
+	TSubclassOf<ASPowerupActor> PowerUpClass;
+
+	ASPowerupActor* PowerUpInstance;
+
+	UPROPERTY(EditDefaultsOnly, Category = "PickupActor")
+	float CooldownDuration;
+
+	UFUNCTION()
+	void Respawn();
+
+	FTimerHandle TimerHandle_RespawnTimer;
 
 public:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;	
