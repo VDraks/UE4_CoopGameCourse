@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "STrackerBot.generated.h"
 
+class USoundCue;
 class USphereComponent;
 class USHealthComponent;
 
@@ -65,9 +66,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
 	float ExplosionDamage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	float SelfDamageInterval;
+
 	FTimerHandle TimerHandle_SelfDamage;
 
-	void DamageSelf();;
+	void DamageSelf();
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	USoundCue* SelfDestructSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	USoundCue* ExplodedSound;
 
 public:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
