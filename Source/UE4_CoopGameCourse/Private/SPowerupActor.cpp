@@ -3,6 +3,8 @@
 
 #include "SPowerupActor.h"
 
+#include "GeneratedCodeHelpers.h"
+
 // Sets default values
 ASPowerupActor::ASPowerupActor()
 {
@@ -10,14 +12,10 @@ ASPowerupActor::ASPowerupActor()
 	TotalNrOfTicks = 0;
 
 	TicksProcessed = 0;
-}
 
-// Called when the game starts or when spawned
-void ASPowerupActor::BeginPlay()
-{
-	Super::BeginPlay();
+	bIsPowerActive = false;
 
-	
+	SetReplicates(true);
 }
 
 void ASPowerupActor::OnTickPowerup()
@@ -30,13 +28,24 @@ void ASPowerupActor::OnTickPowerup()
 	{
 		OnExpired();
 
+		bIsPowerActive = false;
+		OnRep_PowerActive();
+
 		GetWorldTimerManager().ClearTimer(TimerHandle_PowerupTick);
 	}
 }
 
-void ASPowerupActor::ActivatePowerup()
+void ASPowerupActor::OnRep_PowerActive()
 {
-	OnActivated();
+	OnPowerupStateChanged(bIsPowerActive);
+}
+
+void ASPowerupActor::ActivatePowerup(AActor* ActivateFor)
+{
+	OnActivated(ActivateFor);
+
+	bIsPowerActive = true;
+	OnRep_PowerActive();
 	
 	if (PowerupInterval > 0.f)
 	{
@@ -48,3 +57,9 @@ void ASPowerupActor::ActivatePowerup()
 	}
 }
 
+void ASPowerupActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASPowerupActor, bIsPowerActive);
+}
