@@ -36,6 +36,13 @@ ASTrackerBot::ASTrackerBot()
 	SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	SphereComp->SetupAttachment(RootComponent);
 
+	BotCheckSphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("BotCheckSphereComp"));
+	BotCheckSphereComp->SetSphereRadius(500);
+	BotCheckSphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	BotCheckSphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	BotCheckSphereComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	BotCheckSphereComp->SetupAttachment(RootComponent);
+
 	bUseVelocityChange = false;
 	MovementForce = 1000;
 	RequiredDistanceToTarget = 100;
@@ -44,6 +51,10 @@ ASTrackerBot::ASTrackerBot()
     ExplosionRadius = 200;
 
 	SelfDamageInterval = 0.25f;
+
+	PowerLevel = 0;
+	MaxPowerLevel = 3;
+	LastPowerLevelCheckTime = 0.f;
 }
 
 // Called when the game starts or when spawned
@@ -62,14 +73,9 @@ void ASTrackerBot::BeginPlay()
 void ASTrackerBot::HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
 	const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (MatInst == nullptr)
+	if (GetMatInst())
 	{
-		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));	
-	}
-
-	if (MatInst)
-	{
-		MatInst->SetScalarParameterValue("LastTimeDamageTaken", GetWorld()->TimeSeconds);	
+		GetMatInst()->SetScalarParameterValue("LastTimeDamageTaken", GetWorld()->TimeSeconds);	
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Health %s of %s"), *FString::SanitizeFloat(Health), *GetName())
@@ -116,7 +122,10 @@ void ASTrackerBot::SelfDestruct()
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
 
-		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this,
+		const float FinalDamage = ExplosionDamage +
+			ExplosionDamage * FMath::Clamp(PowerLevel / static_cast<float>(MaxPowerLevel), 0.f, 1.f);
+
+		UGameplayStatics::ApplyRadialDamage(this, FinalDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this,
                                             GetInstigatorController(), true);
 
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
@@ -149,6 +158,10 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 
 		UGameplayStatics::SpawnSoundAttached(SelfDestructSound, RootComponent);		
 	}
+	else
+	{
+		ASTrackerBot* OtherBot = Cast<ASTrackerBot>(OtherActor);
+	}
 }
 
 void ASTrackerBot::Tick(float DeltaTime)
@@ -180,6 +193,49 @@ void ASTrackerBot::Tick(float DeltaTime)
 
 		DrawDebugSphere(GetWorld(), NextPathPoint, 20, 12, FColor::Yellow,
             false, 0.0f, 1.f);
+	}
+
+	CheckNearbyBots(DeltaTime);
+}
+
+UMaterialInstanceDynamic* ASTrackerBot::GetMatInst()
+{
+	if (MatInst == nullptr)
+	{
+		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));	
+	}
+
+	return MatInst;
+}
+
+void ASTrackerBot::CheckNearbyBots(float DeltaTime)
+{	
+	if (LastPowerLevelCheckTime < 1.f)
+	{
+		LastPowerLevelCheckTime += DeltaTime;
+		return;
+	}
+
+	LastPowerLevelCheckTime = 0.f;
+	
+	const int OldPowerLevel = PowerLevel;
+	
+	TArray<AActor*> OverlappingActors;
+	GetOverlappingActors(OverlappingActors, GetClass());
+
+	PowerLevel = 0;
+	for (const AActor* Actor : OverlappingActors)
+	{
+		PowerLevel++;
+		UE_LOG(LogTemp, Log, TEXT("Bot overlaped %s"), *Actor->GetName());
+	}
+
+	if (OldPowerLevel != PowerLevel)
+	{
+		if (GetMatInst())
+		{
+			GetMatInst()->SetScalarParameterValue("PowerLevelAlpha", PowerLevel / static_cast<float>(MaxPowerLevel));	
+		}
 	}
 }
 

@@ -32,6 +32,9 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	USphereComponent* SphereComp;
 
+	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
+	USphereComponent* BotCheckSphereComp;
+
 	UFUNCTION()
 	void HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta,
 		const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
@@ -79,9 +82,20 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
 	USoundCue* ExplodedSound;
 
-public:
-	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	float LastPowerLevelCheckTime;
 	
+	int PowerLevel;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+	int MaxPowerLevel;
+
+public:
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;	
 
 	virtual void Tick(float DeltaTime) override;
+
+private:
+	UMaterialInstanceDynamic* GetMatInst();
+	
+	void CheckNearbyBots(float DeltaTime);
 };
