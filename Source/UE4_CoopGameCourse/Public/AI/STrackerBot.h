@@ -44,6 +44,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
 	float RequiredDistanceToTarget;
 
+	UMaterialInstanceDynamic* MatInst;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
