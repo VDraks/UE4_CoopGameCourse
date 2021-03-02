@@ -32,7 +32,7 @@ protected:
 
 	ASPowerupActor* PowerUpInstance;
 
-	UPROPERTY(EditDefaultsOnly, Category = "PickupActor")
+	UPROPERTY(EditInstanceOnly, Category = "PickupActor")
 	float CooldownDuration;
 
 	UFUNCTION()
