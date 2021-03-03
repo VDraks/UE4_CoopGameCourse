@@ -77,6 +77,34 @@ void ASGameMode::CheckWaveState()
 	}
 }
 
+void ASGameMode::CheckAnyPlayerAlive()
+{
+	for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+		if (PC && PC->GetPawn())
+		{
+			APawn* MyPawn = PC->GetPawn();
+			auto HealthComp = MyPawn->FindComponentByClass<USHealthComponent>();
+			if (ensure(HealthComp) && HealthComp->GetHealth() > 0.0f)
+			{
+				return;
+			}
+		}
+	}
+
+	GameOver();
+}
+
+void ASGameMode::GameOver()
+{
+	EndWave();
+
+	// TODO Finish the match
+
+	UE_LOG(LogTemp, Log, TEXT("Game over"));
+}
+
 void ASGameMode::StartPlay()
 {
 	Super::StartPlay();
@@ -89,4 +117,6 @@ void ASGameMode::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	CheckWaveState();
+
+	CheckAnyPlayerAlive();
 }
