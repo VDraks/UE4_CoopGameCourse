@@ -98,4 +98,8 @@ private:
 	UMaterialInstanceDynamic* GetMatInst();
 	
 	void CheckNearbyBots(float DeltaTime);
+
+	FTimerHandle TimerHandle_RefreshPath;
+
+	void RefreshPath();
 };
